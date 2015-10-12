@@ -2,8 +2,10 @@
 require 'faye/websocket'
 require 'eventmachine'
 
+require 'JSON'
 
-module Pushrunner
+
+module PushRunner
   API_VERSION = "1.1"
   @@flags = {}
 

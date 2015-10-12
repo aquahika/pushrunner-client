@@ -5,7 +5,7 @@ require 'pushrunner/client/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "pushrunner-client"
-  spec.version       = Pushrunner::Client::VERSION
+  spec.version       = PushRunner::Client::VERSION
   spec.authors       = ["Hikaru"]
   spec.email         = ["aqua.hika@gmail.com"]
 
