@@ -1,28 +1,56 @@
 # Pushrunner::Client
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/pushrunner/client`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+The Client of Simple Bidirectinal Server-Client Push Message Protocol.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'pushrunner-client'
+gem 'pushrunner-client', github: 'aquahika/pushrunner-client'
 ```
 
-And then execute:
+You should require this gem like;
 
-    $ bundle
+```ruby
+require 'pushrunner/client'
+```
 
-Or install it yourself as:
-
-    $ gem install pushrunner-client
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+require 'pushrunner/client'
+
+EM.run do
+ #s PushRunner::set :development
+
+  con = PushRunner::Client.new(url:" <==== YOUR PUSHRUNNER SERVER ADDRESS ====> ",ping_interval:5,timeout:8)
+
+  con.on 'light/on' do
+    puts "Turning on light"
+  end
+
+  con.on 'light/off' do
+    puts "Turning off light"
+  end  
+
+  con.on 'thermostat/set' do |value|
+    puts "setting thermostat to #{value} degree"
+  end
+
+
+  con.onclose do
+    puts "Connection has been closed!"
+  end
+
+  con.onconnect do
+    puts "Connected to Server!"
+  end
+
+end
+
+```
 
 ## Development
 
@@ -32,7 +60,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/pushrunner-client.
+Bug reports and pull requests are welcome on GitHub at https://github.com/aquahika/pushrunner-client.
 
 
 ## License
