@@ -25,7 +25,11 @@ require 'pushrunner/client'
 EM.run do
  #s PushRunner::set :development
 
-  con = PushRunner::Client.new(url:" <==== YOUR PUSHRUNNER SERVER ADDRESS ====> ",ping_interval:5,timeout:8)
+  con = PushRunner::Client.new(
+  	url:" <==== YOUR PUSHRUNNER SERVER ADDRESS ====> ",
+  	ping_interval:5,
+  	timeout:8
+  )
 
   con.on 'light/on' do
     puts "Turning on light"
