@@ -1,4 +1,4 @@
-# Pushrunner::Client
+# PushRunner::Client
 
 The Client of Simple Bidirectinal Server-Client Push Message Protocol.
 
