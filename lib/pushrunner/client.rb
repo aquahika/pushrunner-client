@@ -3,6 +3,7 @@ require 'faye/websocket'
 require 'eventmachine'
 
 require 'JSON'
+require 'pp'
 
 
 module PushRunner
@@ -74,7 +75,7 @@ module PushRunner
     def ping
       if connected? 
        puts "[ #{Time.now.strftime("%Y/%m/%d %H:%M:%S")} Websocket:: \t] Send ping." if PushRunner.development?
-       @ws.send Message.new(method:"system/ping").to_json
+       @ws.send Message.new(method:"system/ping").to_json if @ws
       end
     end
 
@@ -85,23 +86,27 @@ module PushRunner
       @last_pong_timer = EventMachine::Timer.new(@TIMEOUT) { 
         #disconnect when no longer receiving pong packet.
         puts "[ #{Time.now.strftime("%Y/%m/%d %H:%M:%S")} Connection Manager:: \t] No Longer pong packet received. " if PushRunner.development? 
+        @ws.close(3000,"no pong received") if @ws
+        @ws=nil
         disconnected
       }
     end
 
     #called when connected
     def connected
+      puts "connected_flag:#{@connected_flag}"
+      return if connected?
       instance_eval(&@onconnect_proc) #if @onconnect_proc.instance_of?(Proc) && @connected_flag == false
       @connected_flag = true
     end
 
     #called when disconnected
     def disconnected
+      puts "connected_flag:#{@connected_flag}"
+      return unless connected?
       instance_eval(&@onclose_proc) if @onclose_proc.instance_of?(Proc) && @connected_flag == true
       @connected_flag = false
       puts "[ #{Time.now.strftime("%Y/%m/%d %H:%M:%S")} Websocket:: \t] Disconnected. " if PushRunner.development? 
-      sleep 5
-      connect
     end
 
     def connected?
@@ -110,18 +115,20 @@ module PushRunner
 
 
     def connect
+      return unless @ws.nil?
       puts "[ #{Time.now.strftime("%Y/%m/%d %H:%M:%S")} Websocket:: \t] Connecting to #{@URL}." if PushRunner.development? 
       @ws = Faye::WebSocket::Client.new(@URL, nil,  ping: 10)
 
       @ws.on :open do |event|
+        pong 
         puts "[ #{Time.now.strftime("%Y/%m/%d %H:%M:%S")} Websocket:: \t] Connected." if PushRunner.development?
         connected
       end 
 
       @ws.on :message do |event|
         # here is the entry point for data coming from the server.
+        pong
         begin
-          pong
           msg = JSON.parse(event.data,:symbolize_names => true)
           method = msg[:status][:method]
           body = msg[:body]
@@ -138,7 +145,11 @@ module PushRunner
       @ws.on :close do |event|
         # connection has been closed callback.
         puts "[ #{Time.now.strftime("%Y/%m/%d %H:%M:%S")} Websocket:: \t] Closed. #{event.code} #{event.reason}" if PushRunner.development?
-        disconnected
+        @ws=nil
+        puts "called :close event"
+        @last_pong_timer.cancel if @last_pong_timer.instance_of?(EventMachine::Timer) #cancel old timer
+        sleep 5
+        connect
       end
     end
 
