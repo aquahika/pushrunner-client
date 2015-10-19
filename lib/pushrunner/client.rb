@@ -49,7 +49,7 @@ module PushRunner
     end
 
     def connected?
-      connected_flag
+      return @connected_flag
     end
 
     #register block 
@@ -59,6 +59,11 @@ module PushRunner
 
     def onclose(&block)
       @onclose_proc = block
+    end
+
+    def send message
+      fail unless message.instance_of?(Message)
+      @ws.send message.to_json
     end
 
 
@@ -94,7 +99,7 @@ module PushRunner
 
     #called when connected
     def connected
-      puts "connected_flag:#{@connected_flag}"
+     # puts "connected_flag:#{@connected_flag}"
       return if connected?
       instance_eval(&@onconnect_proc) #if @onconnect_proc.instance_of?(Proc) && @connected_flag == false
       @connected_flag = true
@@ -109,9 +114,6 @@ module PushRunner
       puts "[ #{Time.now.strftime("%Y/%m/%d %H:%M:%S")} Websocket:: \t] Disconnected. " if PushRunner.development? 
     end
 
-    def connected?
-      @connected_flag
-    end
 
 
     def connect
@@ -147,6 +149,7 @@ module PushRunner
         puts "[ #{Time.now.strftime("%Y/%m/%d %H:%M:%S")} Websocket:: \t] Closed. #{event.code} #{event.reason}" if PushRunner.development?
         @ws=nil
         puts "called :close event"
+        disconnected
         @last_pong_timer.cancel if @last_pong_timer.instance_of?(EventMachine::Timer) #cancel old timer
         sleep 5
         connect
@@ -165,7 +168,7 @@ module PushRunner
           :created_at_humanity=>Time.now,
           :method => options[:method] || nil
         },
-        self[:body] => options[:body] || nil
+        :body => options[:body] || nil
       }
 
       self.merge!(templete)
@@ -176,7 +179,7 @@ module PushRunner
     end
 
     def method val
-      self[:method]=val unless val.nil?
+      self[:status][:method]=val unless val.nil?
     end
 
   end
